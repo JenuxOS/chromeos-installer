@@ -1,0 +1,55 @@
+name: chromeos-build
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      main
+  workflow_dispatch:
+  schedule:
+   - cron: 3 0 * * *
+
+jobs:
+  chromeos:
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64]
+    
+    name: build
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 240
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      
+      - name: Create output directory
+        run: mkdir -p ./art
+      
+      - name: Build Docker image
+        run: |
+          docker build -t chrome -f dockerfile $PWD
+      
+      - name: Run Docker container
+        run: |
+          docker run --privileged --rm -v $PWD/out:/build/out -i -t chrome
+      
+      - name: Upload iso
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: chromeos.img
+          path: |
+            ./art/*.img
+          compression-level: 9
+          if-no-files-found: error
+          retention-days: 90

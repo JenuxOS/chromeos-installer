@@ -1,0 +1,77 @@
+#!/bin/sh
+if [ -e /.dockerenv ];then
+mount -t proc /proc /proc
+mount -t devtmpfs /dev /dev
+mount -t sysfs /sys /sys
+fi
+if [ -e rootc.img ]||[ -e efi_secure.img ];then
+sleep .01
+else
+while true;do
+if curl -L `python brunch-url.py sebanc/brunch 0`|bsdtar -x efi_secure.img rootc.img;then
+break
+else
+continue
+fi
+done
+fi
+if [ -e *.changelog ];then
+sleep .01
+else
+while true;do
+if curl -L https://jenux.dev/get\?x86_64-installer|bsdtar -x;then
+rm -rf *.changelog *.enroler.iso *.sample *.sha512 unattends vmdisks
+truncate -s 12G *.iso
+break
+else
+continue
+fi
+done
+fi
+if [ -e *.bin ];then
+sleep .01
+else
+while true;do
+if curl -L `chromeos_dlindex=0 python chromeos-url.py`|bsdtar -x;then
+truncate -s 16G *.bin
+break
+else
+continue
+fi
+done
+fi
+export isodev=`losetup -P --show -f *.iso`
+export loopdev=`losetup -P --show -f *.bin`
+sgdisk -e -d 3 -N 3 -t 3:0700 -c 3:linuxiso $isodev
+e2fsck -fy $isodev"p3"
+resize2fs $isodev"p3"
+mkdir iso
+mount $isodev"p3" iso
+cp $loopdev"p3" root
+sgdisk -e -d 1 -d 3 -d 5 -d 7 -n 3:+1s:+4G:7F01 -t 3:7f01 -c 3:ROOT-A -n 5:+1s:+4G:7F01 -t 5:7f01 -c 5:ROOT-B -n 7:+1s:+1G:7F01 -t 7:7f01 -c 7:ROOT-C -n 1:+1s:-1s:8300 -t 1:8300 -c 1:STATE -A 2:set:48 -A 2:set:56 -A 4:set:52 -A 4:set:53 -A 4:set:54 -A 4:set:55 -A 6:set:52 -A 6:set:53 -A 6:set:54 -A 6:set:55 $loopdev
+partprobe
+cp root $loopdev"p3"
+cp root $loopdev"p5"
+rm root
+cp efi_secure.img $loopdev"p12"
+mount $loopdev"p12" /mnt
+sed -i "s|options=\"\"|options=\"enable_updatet,pwa,enable_crosh_sudo\"|g;s|verbose=0|verbose=1|g;s|cmdline_params=\"\"|cmdline_params=\"kvm.ignore_msrs=Y\"|g" /mnt/efi/boot/settings.cfg
+sed -i "/terminal_output gfxterm/d" /mnt/efi/boot/theme.cfg
+umount /mnt
+cp rootc.img $loopdev"p7"
+mkfs.ext4 -q -L STATE $loopdev"p1"
+losetup -d $loopdev
+qemu-img convert -p -f raw -O qcow2 *.bin chromeos.qcow2
+cat > chromeos.qcow2.sh<<EOF
+sgdisk -e -d 1 -N 1 -c 1:STATE \$2
+partprobe
+mkfs.ext4 -q -L STATE \$2"-part1"
+EOF
+cp iso/scripts/local_imager/rootpasswd iso
+mv chromeos.qcow2 iso
+mv chromeos.qcow2.sh iso
+rm *.bin efi_secure.img rootc.img
+umount iso
+rmdir iso
+losetup -d $isodev
+mv *.iso out/chromeos.img
