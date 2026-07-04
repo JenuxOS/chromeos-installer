@@ -39,7 +39,7 @@ jobs:
       
       - name: Run Docker container
         run: |
-          docker run --privileged --rm -v $PWD/out:/build/out -t chrome
+          docker run --privileged --rm -v $PWD/art:/build/out -t chrome
       
       - name: Upload iso
         uses: actions/upload-artifact@v7
