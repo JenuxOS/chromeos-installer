@@ -55,7 +55,7 @@ cp root $loopdev"p5"
 rm root
 cp efi_secure.img $loopdev"p12"
 mount $loopdev"p12" /mnt
-sed -i "s|options=\"\"|options=\"enable_updatet,pwa,enable_crosh_sudo\"|g;s|verbose=0|verbose=1|g;s|cmdline_params=\"\"|cmdline_params=\"kvm.ignore_msrs=Y\"|g" /mnt/efi/boot/settings.cfg
+sed -i "s|options=\"\"|options=\"enable_updates,enable_crosh_sudo,pwa\"|g;s|verbose=0|verbose=1|g;s|cmdline_params=\"\"|cmdline_params=\"kvm.ignore_msrs=Y\"|g" /mnt/efi/boot/settings.cfg
 sed -i "/terminal_output gfxterm/d" /mnt/efi/boot/theme.cfg
 umount /mnt
 cp rootc.img $loopdev"p7"
