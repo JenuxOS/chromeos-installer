@@ -50,7 +50,8 @@ mount $isodev"p3" iso
 cp $loopdev"p3" root
 sgdisk -e -d 1 -d 3 -d 5 -d 7 -n 3:+1s:+4G:7F01 -t 3:7f01 -c 3:ROOT-A -n 5:+1s:+4G:7F01 -t 5:7f01 -c 5:ROOT-B -n 7:+1s:+1G:7F01 -t 7:7f01 -c 7:ROOT-C -n 1:+1s:-1s:8300 -t 1:8300 -c 1:STATE -A 2:set:48 -A 2:set:56 -A 4:set:52 -A 4:set:53 -A 4:set:54 -A 4:set:55 -A 6:set:52 -A 6:set:53 -A 6:set:54 -A 6:set:55 $loopdev
 partprobe
-cp root $loopdev"p3"
+cp /dev/null $loopdev"p3"
+echo y|mkfs.ext4 -q $loopdev"p3"
 cp root $loopdev"p5"
 rm root
 cp efi_secure.img $loopdev"p12"
