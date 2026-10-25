@@ -9,7 +9,7 @@ try:
 except:
     pass
 if board is None:
-    board='shyvana'
+    board='jinlon'
 builds=[b for b in buildlist if(b.get("hwidmatch").__contains__(board) or (b.get("hwidmatch").__contains__(board.upper())))]
 display=[]
 builddata=''

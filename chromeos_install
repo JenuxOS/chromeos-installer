@@ -15,38 +15,38 @@ continue
 fi
 done
 fi
-if [ -e *.changelog ];then
+if [ -e *.iso ];then
 sleep .01
 else
 while true;do
-if curl -L https://jenux.dev/get\?x86_64-installer|bsdtar -x;then
-rm -rf *.changelog *.enroler.iso *.sample *.sha512 unattends vmdisks
-truncate -s 12G *.iso
-break
-else
-continue
-fi
-done
-fi
-if [ -e *.bin ];then
-sleep .01
-else
-while true;do
-if curl -L `chromeos_dlindex=0 python chromeos-url.py`|bsdtar -x;then
-truncate -s 16G *.bin
-break
-else
-continue
-fi
-done
-fi
+if curl -L https://jenux.dev/get\?x86_64-installer|bsdunzip -I utf-8 -O utf-8 -o /dev/stdin Jenux-`date +%Y.%m.%d`"-x86_64.iso";then
+truncate -s 20G *.iso
 export isodev=`losetup -P --show -f *.iso`
-export loopdev=`losetup -P --show -f *.bin`
 sgdisk -e -d 3 -N 3 -t 3:0700 -c 3:linuxiso $isodev
 e2fsck -fy $isodev"p3"
 resize2fs $isodev"p3"
 mkdir iso
 mount $isodev"p3" iso
+break
+else
+continue
+fi
+done
+fi
+for chromeos_dlboard in "jinlon" "voxel" "kanix" "gumboz";do
+if [ -e *.bin ];then
+sleep .01
+else
+while true;do
+if curl -L `chromeos_dlboard=$chromeos_dlboard chromeos_dlindex=0 python chromeos-url.py`|bsdunzip -I utf-8 -O utf-8 -o /dev/stdin;then
+truncate -s 16G *.bin
+export loopdev=`losetup -P --show -f *.bin`
+break
+else
+continue
+fi
+done
+fi
 cp $loopdev"p3" root
 sgdisk -e -d 1 -d 3 -d 5 -d 7 -n 3:+1s:+4G:7F01 -t 3:7f01 -c 3:ROOT-A -n 5:+1s:+4G:7F01 -t 5:7f01 -c 5:ROOT-B -n 7:+1s:+1G:7F01 -t 7:7f01 -c 7:ROOT-C -n 1:+1s:-1s:8300 -t 1:8300 -c 1:STATE -A 2:set:48 -A 2:set:56 -A 4:set:52 -A 4:set:53 -A 4:set:54 -A 4:set:55 -A 6:set:52 -A 6:set:53 -A 6:set:54 -A 6:set:55 $loopdev
 partprobe
@@ -62,16 +62,32 @@ umount /mnt
 cp rootc.img $loopdev"p7"
 mkfs.ext4 -q -L STATE $loopdev"p1"
 losetup -d $loopdev
-qemu-img convert -p -f raw -O qcow2 *.bin chromeos.qcow2
-cat > chromeos.qcow2.sh<<EOF
+case $chromeos_dlboard in
+jinlon)
+export displayname=default-intel-gen10-jinlon
+;;
+voxel)
+export displayname=intel-gen11-to-gen13-voxel
+;;
+kanix)
+export displayname=intel-gen-14-and-core-ultra-kanix
+;;
+gumboz)
+export displayname=amd-ryzen-gumboz
+;;
+*)
+unset displayname
+;;
+esac
+qemu-img convert -p -f raw -O qcow2 *.bin iso/chromeos-$displayname".qcow2"
+rm *.bin
+cat > iso/chromeos-$displayname".qcow2.sh"<<EOF
 sgdisk -e -d 1 -N 1 -c 1:STATE \$2
 partprobe
 mkfs.ext4 -q -L STATE \$2"-part1"
 EOF
 cp iso/scripts/local_imager/rootpasswd iso
-mv chromeos.qcow2 iso
-mv chromeos.qcow2.sh iso
-rm *.bin efi_secure.img rootc.img
+done
 umount iso
 rmdir iso
 losetup -d $isodev
