@@ -51,3 +51,13 @@ jobs:
           compression-level: 9
           if-no-files-found: error
           retention-days: 90
+      - name: Upload usb
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: chromeos-usb.img
+          path: |
+            ./art/*.bin
+          compression-level: 9
+          if-no-files-found: error
+          retention-days: 90

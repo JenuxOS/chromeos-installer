@@ -80,7 +80,7 @@ unset displayname
 ;;
 esac
 qemu-img convert -p -f raw -O qcow2 *.bin iso/chromeos-$displayname".qcow2"
-rm *.bin
+mv *.bin out/chromeos-usb-$chromeos_dlboard".bin"
 cat > iso/chromeos-$displayname".qcow2.sh"<<EOF
 sgdisk -e -d 1 -N 1 -c 1:STATE \$2
 partprobe
