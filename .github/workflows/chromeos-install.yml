@@ -51,13 +51,43 @@ jobs:
           compression-level: 9
           if-no-files-found: error
           retention-days: 90
-      - name: Upload usb
+      - name: Upload usb jinlon
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: chromeos-usb.img
+          name: chromeos-usb-jinlon.img
           path: |
-            ./art/*.bin
+            ./art/chromeos-usb-jinlon.bin
+          compression-level: 9
+          if-no-files-found: error
+          retention-days: 90
+      - name: Upload usb voxel
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: chromeos-usb-voxel.img
+          path: |
+            ./art/chromeos-usb-voxel.bin
+          compression-level: 9
+          if-no-files-found: error
+          retention-days: 90
+      - name: Upload usb kanix
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: chromeos-usb-kanix.img
+          path: |
+            ./art/chromeos-usb-kanix.bin
+          compression-level: 9
+          if-no-files-found: error
+          retention-days: 90
+      - name: Upload usb gumboz
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: chromeos-usb-gumboz.img
+          path: |
+            ./art/chromeos-usb-gumboz.bin
           compression-level: 9
           if-no-files-found: error
           retention-days: 90
