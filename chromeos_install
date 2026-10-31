@@ -3,6 +3,19 @@ if [ -e /.dockerenv ];then
 mount -t proc /proc /proc
 mount -t devtmpfs /dev /dev
 mount -t sysfs /sys /sys
+if [ -e /proc/sys/fs/binfmt_misc/ ];then
+sleep .01
+else
+mkdir -p /proc/sys/fs/binfmt_misc/
+fi
+if mountpoint -q /proc/sys/fs/binfmt_misc/;then
+sleep .01
+else
+mount -t binfmt_misc /proc/sys/fs/binfmt_misc/ /proc/sys/fs/binfmt_misc/
+fi
+for f in `ls /lib/binfmt.d/*`;do
+/lib/systemd/systemd-binfmt  $f
+done
 fi
 if [ -e rootc.img ]||[ -e efi_secure.img ];then
 sleep .01
@@ -61,6 +74,14 @@ sed -i "/terminal_output gfxterm/d" /mnt/efi/boot/theme.cfg
 umount /mnt
 cp rootc.img $loopdev"p7"
 mkfs.ext4 -q -L STATE $loopdev"p1"
+if [ -e /state ];then
+sleep .01
+else
+mkdir /state
+fi
+mount $loopdev"p1" /state
+fstrim -v /state
+umount /state
 losetup -d $loopdev
 case $chromeos_dlboard in
 jinlon)
